@@ -240,19 +240,40 @@ export const Conversation:FC<ConversationProps> = ({
         socket,
       }}
     >
-    <div>
-    <div className="main-grid h-screen max-h-screen w-screen p-4 max-w-96 md:max-w-screen-lg m-auto">
-      <div className="controls text-center flex justify-center items-center gap-2">
-         <Button
-            onClick={onPressConnect}
-            disabled={socketStatus !== "connected" && !isOver}
-          >
-            {socketButtonMsg}
-          </Button>
-          <div className={`h-4 w-4 rounded-full ${socketColor}`} />
-        </div>
-        {audioContext.current && worklet.current && <MediaContext.Provider value={
-          {
+      <div className="main-grid">
+        <header className="controls glass-card rounded-2xl px-6 py-4 animate-in fade-in slide-in-from-top-4 duration-700">
+          <div className="flex items-center gap-4">
+             <div className="w-10 h-10 rounded-xl bg-[#76b900]/10 flex items-center justify-center">
+               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#76b900]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+               </svg>
+             </div>
+             <div>
+               <h2 className="font-bold text-white tracking-tight">Active Session</h2>
+               <div className="flex items-center gap-2">
+                 <div className={`h-2 w-2 rounded-full ${socketColor} ${socketStatus === 'connected' ? 'animate-pulse' : ''}`} />
+                 <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">{socketStatus}</span>
+               </div>
+             </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+             <button
+                onClick={onPressConnect}
+                disabled={socketStatus !== "connected" && !isOver}
+                className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
+                  isOver 
+                    ? "bg-[#76b900] text-black hover:scale-105" 
+                    : "bg-white/5 text-white hover:bg-white/10"
+                }`}
+              >
+                {socketButtonMsg}
+              </button>
+          </div>
+        </header>
+
+        {audioContext.current && worklet.current && (
+          <MediaContext.Provider value={{
             startRecording,
             stopRecording,
             audioContext: audioContext as MutableRefObject<AudioContext>,
@@ -261,34 +282,68 @@ export const Conversation:FC<ConversationProps> = ({
             stereoMerger,
             micDuration,
             actualAudioPlayed,
-          }
-        }>
-          <div className="relative player h-full max-h-full w-full justify-between gap-3 md:p-12">
-              <ServerAudio
-                setGetAudioStats={(callback: () => AudioStats) =>
-                  (getAudioStats.current = callback)
-                }
-                theme={theme}
-              />
-              <UserAudio theme={theme}/>
-              <div className="pt-8 text-sm flex justify-center items-center flex-col download-links">
-                {audioURL && <div><a href={audioURL} download={`personaplex_audio.${getExtension("audio")}`} className="pt-2 text-center block">Download audio</a></div>}
+          }}>
+            <main className="player animate-in fade-in duration-1000">
+              <div className="relative flex flex-col items-center justify-center gap-12 py-12">
+                {/* Visualizer Background */}
+                <div className="absolute inset-0 flex items-center justify-center -z-10 opacity-20">
+                  <div className="w-64 h-64 rounded-full bg-[#76b900] blur-[120px] animate-pulse-slow" />
+                </div>
+
+                <div className="w-full max-w-sm aspect-square glass-card rounded-full flex items-center justify-center relative glow-border">
+                  <ServerAudio
+                    setGetAudioStats={(callback: () => AudioStats) =>
+                      (getAudioStats.current = callback)
+                    }
+                    theme={theme}
+                  />
+                </div>
+
+                <div className="w-24 h-24 glass-card rounded-full flex items-center justify-center">
+                  <UserAudio theme={theme}/>
+                </div>
+
+                {audioURL && (
+                  <div className="mt-4">
+                    <a 
+                      href={audioURL} 
+                      download={`personaplex_audio.${getExtension("audio")}`} 
+                      className="px-4 py-2 rounded-lg bg-white/5 text-zinc-400 text-xs font-bold hover:text-white transition-colors flex items-center gap-2"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                      Download Transcript Audio
+                    </a>
+                  </div>
+                )}
               </div>
-          </div>
-          <div className="scrollbar player-text" ref={textContainerRef}>
-            <TextDisplay containerRef={textContainerRef}/>
-          </div>
-          <div className="player-stats hidden md:block">
-            <ServerAudioStats getAudioStats={getAudioStats} />
-          </div></MediaContext.Provider>}
-        </div>
-        <div className="max-w-96 md:max-w-screen-lg p-4 m-auto text-center">
-          <ServerInfo/>
-        </div>
+            </main>
+
+            <aside className="player-text scrollbar">
+              <div className="flex items-center justify-between mb-6">
+                 <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-widest">Real-time Transcript</h3>
+                 <div className="px-2 py-1 rounded bg-white/5 text-[10px] text-zinc-500 border border-white/5">FULL DUPLEX</div>
+              </div>
+              <div ref={textContainerRef} className="space-y-4">
+                <TextDisplay containerRef={textContainerRef}/>
+              </div>
+            </aside>
+
+            <div className="player-stats glass-card rounded-2xl p-6 animate-in fade-in slide-in-from-right-4 duration-700">
+              <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">Signal Quality</h3>
+              <ServerAudioStats getAudioStats={getAudioStats} />
+              <div className="mt-6 border-t border-white/5 pt-6">
+                <ServerInfo/>
+              </div>
+            </div>
+          </MediaContext.Provider>
+        )}
       </div>
     </SocketContext.Provider>
   );
 };
+
 
         // </MediaContext.Provider> : undefined}
         // 

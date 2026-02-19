@@ -7,31 +7,14 @@ import { Button } from "../../components/Button/Button";
 import { useModelParams } from "../Conversation/hooks/useModelParams";
 import { env } from "../../env";
 import { prewarmDecoderWorker } from "../../decoder/decoderWorker";
+import { AgentGallery } from "./AgentGallery";
+import { AGENT_TEMPLATES, Agent } from "../../config/agents";
 
 const VOICE_OPTIONS = [
   "NATF0.pt", "NATF1.pt", "NATF2.pt", "NATF3.pt",
   "NATM0.pt", "NATM1.pt", "NATM2.pt", "NATM3.pt",
   "VARF0.pt", "VARF1.pt", "VARF2.pt", "VARF3.pt", "VARF4.pt",
   "VARM0.pt", "VARM1.pt", "VARM2.pt", "VARM3.pt", "VARM4.pt",
-];
-
-const TEXT_PROMPT_PRESETS = [
-  {
-    label: "Assistant (default)",
-    text: "You are a wise and friendly teacher. Answer questions or provide advice in a clear and engaging way.",
-  },
-  {
-    label: "Medical office (service)",
-    text: "You work for Dr. Jones's medical office, and you are receiving calls to record information for new patients. Information: Record full name, date of birth, any medication allergies, tobacco smoking history, alcohol consumption history, and any prior medical conditions. Assure the patient that this information will be confidential, if they ask.",
-  },
-  {
-    label: "Bank (service)",
-    text: "You work for First Neuron Bank which is a bank and your name is Alexis Kim. Information: The customer's transaction for $1,200 at Home Depot was declined. Verify customer identity. The transaction was flagged due to unusual location (transaction attempted in Miami, FL; customer normally transacts in Seattle, WA).",
-  },
-  {
-    label: "Astronaut (fun)",
-    text: "You enjoy having a good conversation. Have a technical discussion about fixing a reactor core on a spaceship to Mars. You are an astronaut on a Mars mission. Your name is Alex. You are already dealing with a reactor core meltdown on a Mars mission. Several ship systems are failing, and continued instability will lead to catastrophic failure. You explain what is happening and you urgently ask for help thinking through how to stabilize the reactor.",
-  },
 ];
 
 interface HomepageProps {
@@ -51,82 +34,108 @@ const Homepage = ({
   voicePrompt,
   setVoicePrompt,
 }: HomepageProps) => {
+  const [selectedAgentId, setSelectedAgentId] = useState<string>(AGENT_TEMPLATES[0].id);
+
+  const handleSelectAgent = (agent: Agent) => {
+    setSelectedAgentId(agent.id);
+    setTextPrompt(agent.textPrompt);
+    setVoicePrompt(agent.voicePrompt);
+  };
+
   return (
-    <div className="text-center h-screen w-screen p-4 flex flex-col items-center pt-8">
-      <div className="mb-6">
-        <h1 className="text-4xl text-black">PersonaPlex</h1>
-        <p className="text-sm text-gray-600 mt-2">
-          Full duplex conversational AI with text and voice control.
+    <div className="min-h-screen w-screen flex flex-col items-center py-12 px-4 scrollbar">
+      <div className="text-center mb-12 animate-in fade-in slide-in-from-top-4 duration-1000">
+        <div className="inline-block px-3 py-1 rounded-full bg-[#76b900]/10 border border-[#76b900]/20 text-[#76b900] text-xs font-bold tracking-widest uppercase mb-4">
+          Experimental Lab
+        </div>
+        <h1 className="text-6xl font-black gradient-text tracking-tighter mb-4">
+          PersonaPlex
+        </h1>
+        <p className="text-zinc-400 max-w-lg mx-auto text-lg">
+          Deployment-ready voice agents with sub-second latency and full-duplex personality control.
         </p>
       </div>
 
-      <div className="flex flex-grow justify-center items-center flex-col gap-6 w-full min-w-[500px] max-w-2xl">
-        <div className="w-full">
-          <label htmlFor="text-prompt" className="block text-left text-base font-medium text-gray-700 mb-2">
-            Text Prompt:
-          </label>
-          <div className="border border-gray-300 rounded p-3 mb-3 bg-gray-50">
-            <span className="text-xs font-medium text-gray-500 block mb-2">Examples:</span>
-            <div className="flex flex-wrap gap-2 justify-center">
-              {TEXT_PROMPT_PRESETS.map((preset) => (
-                <button
-                  key={preset.label}
-                  onClick={() => setTextPrompt(preset.text)}
-                  className="px-3 py-1 text-xs bg-white hover:bg-gray-100 text-gray-700 rounded-full border border-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-[#76b900]"
-                >
-                  {preset.label}
-                </button>
-              ))}
+      <div className="w-full max-w-4xl space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200">
+        <section>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-sm border border-white/10">01</span>
+              Select Agent Archetype
+            </h2>
+          </div>
+          <AgentGallery onSelect={handleSelectAgent} selectedAgentId={selectedAgentId} />
+        </section>
+
+        <section className="glass-card rounded-3xl p-8 space-y-8">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-sm border border-white/10 font-bold">02</span>
+            <h2 className="text-xl font-bold text-white">Configure Personality</h2>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-4">
+              <label className="block text-sm font-bold text-zinc-500 uppercase tracking-widest">
+                System Prompt (Persona)
+              </label>
+              <textarea
+                value={textPrompt}
+                onChange={(e) => setTextPrompt(e.target.value)}
+                className="w-full h-48 p-4 bg-black/50 text-white border border-white/10 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#76b900] transition-all resize-none scrollbar"
+                placeholder="How should the agent behave?"
+              />
+            </div>
+
+            <div className="space-y-4">
+              <label className="block text-sm font-bold text-zinc-500 uppercase tracking-widest">
+                Vocal Profile
+              </label>
+              <div className="space-y-2">
+                {VOICE_OPTIONS.slice(0, 8).map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => setVoicePrompt(option)}
+                    className={`w-full p-3 text-left rounded-xl border transition-all ${voicePrompt === option
+                        ? "bg-[#76b900]/10 border-[#76b900] text-white"
+                        : "bg-white/5 border-white/5 text-zinc-400 hover:border-white/10"
+                      }`}
+                  >
+                    <div className="text-xs font-bold">{option.replace('.pt', '')}</div>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-          <textarea
-            id="text-prompt"
-            name="text-prompt"
-            value={textPrompt}
-            onChange={(e) => setTextPrompt(e.target.value)}
-            className="w-full h-32 min-h-[80px] max-h-64 p-3 bg-white text-black border border-gray-300 rounded resize-y focus:outline-none focus:ring-2 focus:ring-[#76b900] focus:border-transparent"
-            placeholder="Enter your text prompt..."
-            maxLength={1000}
-          />
-          <div className="text-right text-xs text-gray-500 mt-1">
-            {textPrompt.length}/1000
-          </div>
-        </div>
+        </section>
 
-        <div className="w-full">
-          <label htmlFor="voice-prompt" className="block text-left text-base font-medium text-gray-700 mb-2">
-            Voice:
-          </label>
-          <select
-            id="voice-prompt"
-            name="voice-prompt"
-            value={voicePrompt}
-            onChange={(e) => setVoicePrompt(e.target.value)}
-            className="w-full p-3 bg-white text-black border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#76b900] focus:border-transparent"
+        <div className="flex flex-col items-center gap-6 py-8">
+          {showMicrophoneAccessMessage && (
+            <p className="px-4 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
+              Microphone access is required to interact with the agent.
+            </p>
+          )}
+
+          <button
+            onClick={async () => await startConnection()}
+            className="group relative px-12 py-4 bg-[#76b900] text-black font-black text-xl rounded-2xl hover:scale-105 transition-all shadow-[0_0_20px_rgba(118,185,0,0.3)] hover:shadow-[0_0_30px_rgba(118,185,0,0.5)] active:scale-95"
           >
-            {VOICE_OPTIONS.map((voice) => (
-              <option key={voice} value={voice}>
-                {voice
-                  .replace('.pt', '')
-                  .replace(/^NAT/, 'NATURAL_')
-                  .replace(/^VAR/, 'VARIETY_')}
-              </option>
-            ))}
-          </select>
-      </div>
+            Launch Agent Session
+          </button>
 
-        {showMicrophoneAccessMessage && (
-          <p className="text-center text-red-500">Please enable your microphone before proceeding</p>
-        )}
-        
-        <Button onClick={async () => await startConnection()}>Connect</Button>
-    </div>
+          <p className="text-zinc-500 text-sm flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+            </svg>
+            Secure, end-to-end encrypted voice stream
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
 
-export const Queue:FC = () => {
-  const theme = "light" as const;  // Always use light theme
+export const Queue: FC = () => {
+  const theme = "dark" as const;
   const [searchParams] = useSearchParams();
   const overrideWorkerAddr = searchParams.get("worker_addr");
   const [hasMicrophoneAccess, setHasMicrophoneAccess] = useState<boolean>(false);
@@ -135,14 +144,13 @@ export const Queue:FC = () => {
 
   const audioContext = useRef<AudioContext | null>(null);
   const worklet = useRef<AudioWorkletNode | null>(null);
-  
-  // enable eruda in development
+
   useEffect(() => {
-    if(env.VITE_ENV === "development") {
+    if (env.VITE_ENV === "development") {
       eruda.init();
     }
     () => {
-      if(env.VITE_ENV === "development") {
+      if (env.VITE_ENV === "development") {
         eruda.destroy();
       }
     };
@@ -153,22 +161,20 @@ export const Queue:FC = () => {
       await window.navigator.mediaDevices.getUserMedia({ audio: true });
       setHasMicrophoneAccess(true);
       return true;
-    } catch(e) {
+    } catch (e) {
       console.error(e);
       setShowMicrophoneAccessMessage(true);
       setHasMicrophoneAccess(false);
     }
     return false;
-}, [setHasMicrophoneAccess, setShowMicrophoneAccessMessage]);
+  }, [setHasMicrophoneAccess, setShowMicrophoneAccessMessage]);
 
   const startProcessor = useCallback(async () => {
-    if(!audioContext.current) {
+    if (!audioContext.current) {
       audioContext.current = new AudioContext();
-      // Prewarm decoder worker as soon as we have audio context
-      // This gives WASM time to load while user grants mic access
       prewarmDecoderWorker(audioContext.current.sampleRate);
     }
-    if(worklet.current) {
+    if (worklet.current) {
       return;
     }
     let ctx = audioContext.current;
@@ -182,24 +188,24 @@ export const Queue:FC = () => {
     worklet.current.connect(ctx.destination);
   }, [audioContext, worklet]);
 
-  const startConnection = useCallback(async() => {
-      await startProcessor();
-      const hasAccess = await getMicrophoneAccess();
-      if (hasAccess) {
+  const startConnection = useCallback(async () => {
+    await startProcessor();
+    const hasAccess = await getMicrophoneAccess();
+    if (hasAccess) {
       // Values are already set in modelParams, they get passed to Conversation
     }
   }, [startProcessor, getMicrophoneAccess]);
 
   return (
-    <>
+    <div className="bg-[#0a0a0b] text-white selection:bg-[#76b900] selection:text-black">
       {(hasMicrophoneAccess && audioContext.current && worklet.current) ? (
         <Conversation
-        workerAddr={overrideWorkerAddr ?? ""}
-        audioContext={audioContext as MutableRefObject<AudioContext|null>}
-        worklet={worklet as MutableRefObject<AudioWorkletNode|null>}
-        theme={theme}
-        startConnection={startConnection}
-        {...modelParams}
+          workerAddr={overrideWorkerAddr ?? ""}
+          audioContext={audioContext as MutableRefObject<AudioContext | null>}
+          worklet={worklet as MutableRefObject<AudioWorkletNode | null>}
+          theme={theme}
+          startConnection={startConnection}
+          {...modelParams}
         />
       ) : (
         <Homepage
@@ -211,6 +217,7 @@ export const Queue:FC = () => {
           setVoicePrompt={modelParams.setVoicePrompt}
         />
       )}
-    </>
+    </div>
   );
 };
+
