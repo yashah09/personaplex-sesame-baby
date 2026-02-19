@@ -248,8 +248,8 @@ class ServerState:
                 await asyncio.sleep(0.001)
                 msg = opus_writer.read_bytes()
 		if len(msg) > 0:
-    			print(f"[DEBUG] Sending audio chunk size={len(msg)} bytes")
-    			await ws.send_bytes(b"\x01" + msg)
+    		    print(f"[DEBUG] Sending audio chunk size={len(msg)} bytes")
+    		    await ws.send_bytes(b"\x01" + msg)
 
 
         clog.log("info", "accepted connection")
